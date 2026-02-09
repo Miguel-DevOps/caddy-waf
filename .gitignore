@@ -1,0 +1,18 @@
+# Build artifacts
+*.tar.gz
+*.tar
+.DS_Store
+Thumbs.db
+
+# Local test files
+test-*
+temp-*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml

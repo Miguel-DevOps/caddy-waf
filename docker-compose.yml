@@ -1,0 +1,40 @@
+# Docker Compose example for Caddy WAF
+# Documentation: https://github.com/Miguel-DevOps/caddy-waf
+
+services:
+  caddy-waf:
+    image: ghcr.io/miguel-devops/caddy-waf:latest
+    container_name: caddy-waf
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Mount your custom Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # Persistent data for certificates
+      - caddy_data:/data
+      # Configuration storage
+      - caddy_config:/config
+    environment:
+      # ACME email for Let's Encrypt certificates
+      - ACME_EMAIL=admin@example.com
+    networks:
+      - caddy-network
+
+  # Example backend service (optional)
+  example-app:
+    image: containous/whoami:latest
+    container_name: example-app
+    restart: unless-stopped
+    networks:
+      - caddy-network
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  caddy-network:
+    driver: bridge

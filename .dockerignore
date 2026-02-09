@@ -1,0 +1,17 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Documentation files
+README.md
+README.es.md
+TUNING.md
+LICENSE
+
+# Docker configuration
+docker-compose.yml
+
+# OS metadata files
+.DS_Store
+Thumbs.db
