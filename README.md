@@ -1,7 +1,7 @@
 # 🛡️ Caddy with Coraza WAF - Developmi Enterprise Edition
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/miguel-devops/caddy-waf?style=flat-square)](https://github.com/Miguel-DevOps/caddy-waf/pkgs/container/caddy-waf)
-[![GitHub License](https://img.shields.io/github/license/Miguel-DevOps/caddy+waf?style=flat-square)](LICENSE)
+[![GitHub License](https://img.shields.io/github/license/Miguel-DevOps/caddy-waf?style=flat-square)](LICENSE)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9617/badge)](https://www.bestpractices.dev/projects/9617)
 
 **Production-hardened Caddy web server with Coraza WAF and OWASP CRS** - A secure, performant, and easy-to-deploy web application firewall solution for modern applications.
