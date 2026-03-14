@@ -1,8 +1,8 @@
 # 🛡️ Caddy with Coraza WAF - Developmi Enterprise Edition
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/miguel-devops/caddy-waf?style=flat-square)](https://github.com/Miguel-DevOps/caddy-waf/pkgs/container/caddy-waf)
+[![GHCR Registry](https://img.shields.io/badge/registry-ghcr.io-blue?style=flat-square)](https://github.com/Miguel-DevOps/caddy-waf/pkgs/container/caddy-waf)
 [![GitHub License](https://img.shields.io/github/license/Miguel-DevOps/caddy-waf?style=flat-square)](LICENSE)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9617/badge)](https://www.bestpractices.dev/projects/9617)
+[![OpenSSF Best Practices In Progress](https://img.shields.io/badge/OpenSSF-Best_Practices_In_Progress-orange?style=flat-square)](https://www.bestpractices.dev/en/criteria)
 
 **Production-hardened Caddy web server with Coraza WAF and OWASP CRS** - A secure, performant, and easy-to-deploy web application firewall solution for modern applications.
 
@@ -11,14 +11,14 @@
 ## ✨ Features
 
 ### 🔒 Security First
-- **Non-root execution**: Runs as `caddy` user (UID 1000) - no root privileges
+- **Non-root execution**: Runs as `caddy` user (UID 1337) - no root privileges
 - **Supply chain security**: Pinned versions, SHA256 verification of OWASP CRS rules
 - **Multi-stage builds**: Minimal attack surface, optimized layers
 - **Health monitoring**: Process verification healthcheck
 - **Structured logging**: JSON logs for SIEM integration
 
 ### 🛡️ WAF Capabilities
-- **Coraza WAF v2.1.0**: Modern, high-performance web application firewall
+- **Coraza WAF v2.2.0**: Modern, high-performance web application firewall
 - **OWASP CRS v4.23.0**: Latest Core Rule Set with 290+ protection rules
 - **DetectionOnly by default**: Prevents false positives in new deployments
 - **Audit logging**: JSON audit logs to stdout for easy monitoring
@@ -34,49 +34,47 @@
 
 ### 1. Pull the Image
 ```bash
-docker pull ghcr.io/miguel-devops/caddy-waf:latest
+docker pull ghcr.io/miguel-devops/caddy-waf:v1.0.0
 ```
 
-### 2. Docker Compose (Recommended)
-```yaml
-# docker-compose.yml
-
-services:
-  caddy-waf:
-    image: ghcr.io/miguel-devops/caddy-waf:latest
-    container_name: caddy-waf
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      - ACME_EMAIL=admin@yourdomain.com
-
-volumes:
-  caddy_data:
-  caddy_config:
+### 2. Create Environment File
+```bash
+cp .env.example .env
+# Edit .env with your domain/backend/image values
 ```
 
-### 3. Basic Caddyfile Configuration
+### 3. Create Runtime Caddyfile From Template (Strict Mode)
+```bash
+cp Caddyfile.example Caddyfile
+# Edit Caddyfile for your domain and upstreams
+```
+
+### 4. Build Your Custom Image (Recommended for your own distribution)
+```bash
+docker build -t your-registry/your-caddy-waf:custom \
+  --build-arg CORAZA_CADDY_REF=v2.2.0 \
+  --build-arg CADDY_RATELIMIT_REF=v0.1.0 \
+  --build-arg CADDY_DNS_CLOUDFLARE_REF=v0.2.3 \
+  .
+```
+
+Then set `CADDY_WAF_IMAGE=your-registry/your-caddy-waf:custom` in `.env`.
+
+### 5. Basic Caddyfile Configuration
 ```caddyfile
 # Caddyfile - Save this as Caddyfile in the same directory as docker-compose.yml
 {
-    email admin@yourdomain.com
     order coraza_waf first
 }
 
-yourdomain.com, www.yourdomain.com {
-    respond "Caddy with Coraza WAF is running! 🚀" 200
+yourdomain.com {
+    respond "Caddy with Coraza WAF is running" 200
 }
 ```
 
-### 4. Start the Container
+### 6. Start the Container
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 📖 Configuration Guide
@@ -87,6 +85,11 @@ The WAF operates in three modes (configured in Caddyfile):
 1. **DetectionOnly** (Default): Logs attacks without blocking - perfect for initial deployment
 2. **On**: Active protection - blocks malicious requests
 3. **Off**: Disables WAF completely
+
+Recommended rollout for production:
+- Keep `SecRuleEngine DetectionOnly` during the initial observation window.
+- Review audit logs and tune CRS exclusions based on real traffic.
+- Switch to `SecRuleEngine On` only after the application has run long enough to establish a stable false-positive baseline (commonly 7-14 days, depending on traffic diversity and release cadence).
 
 ### Example Caddyfile with WAF
 ```caddyfile
@@ -129,6 +132,8 @@ example.com {
 ### Advanced Configuration
 For detailed WAF tuning, rule exceptions, and performance optimization, see the complete [TUNING GUIDE](TUNING.md).
 
+Project roadmap and planned security integrations are tracked in [ROADMAP.md](ROADMAP.md).
+
 ## 🔧 Customization
 
 ### Using Custom OWASP CRS Rules
@@ -141,13 +146,17 @@ volumes:
 ### Environment Variables
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ACME_EMAIL` | (none) | Email for Let's Encrypt certificates |
+| `ACME_EMAIL` | (empty) | Email for Let's Encrypt certificates |
+| `SITE_ADDRESS` | `localhost` | Site address/server name used by Caddy |
+| `BACKEND_UPSTREAM` | `example-app:80` | Reverse proxy backend upstream |
+| `CADDY_WAF_IMAGE` | `ghcr.io/miguel-devops/caddy-waf:v1.0.0` | Caddy WAF image reference |
+| `EXAMPLE_APP_IMAGE` | `containous/whoami:latest` | Demo backend image |
 | `CADDY_ADAPTER` | `caddyfile` | Configuration adapter to use |
 
 ### Plugins Included
-- `github.com/corazawaf/coraza-caddy/v2@v2.1.0` - Coraza WAF integration
-- `github.com/mholt/caddy-ratelimit` - Rate limiting
-- `github.com/caddy-dns/cloudflare` - Cloudflare DNS for ACME
+- `github.com/corazawaf/coraza-caddy/v2@v2.2.0` - Coraza WAF integration
+- `github.com/mholt/caddy-ratelimit@v0.1.0` - Rate limiting
+- `github.com/caddy-dns/cloudflare@v0.2.3` - Cloudflare DNS for ACME
 
 ## 🧪 Testing & Validation
 
@@ -166,10 +175,10 @@ curl -I https://yourdomain.com
 ### Security Scanning
 ```bash
 # Scan image with Trivy
-docker run --rm aquasec/trivy image ghcr.io/miguel-devops/caddy-waf:latest
+docker run --rm aquasec/trivy image ghcr.io/miguel-devops/caddy-waf:v1.0.0
 
 # Scan with Docker Scout
-docker scout quickview ghcr.io/miguel-devops/caddy-waf:latest
+docker scout quickview ghcr.io/miguel-devops/caddy-waf:v1.0.0
 ```
 
 ## 📈 Monitoring & Observability

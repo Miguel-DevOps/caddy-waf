@@ -22,7 +22,7 @@ directives `
 `
 ```
 
-After 7 days of monitoring, change to:
+After a prudent monitoring period (commonly 7-14 days, based on traffic diversity and release frequency), change to:
 ```caddyfile
 SecRuleEngine On
 ```
@@ -138,8 +138,16 @@ volumes:
 2. **Method B**: Update script in init container
 ```bash
 #!/bin/sh
-wget -qO- https://github.com/coreruleset/coreruleset/archive/refs/tags/latest.tar.gz | \
-  tar xz -C /etc/caddy/owasp-crs --strip-components=1
+set -euo pipefail
+
+CRS_VERSION="v4.23.0"
+# Verify the checksum in the official release artifacts before use.
+CRS_SHA256="PENDING_MANUAL_VERIFICATION"
+
+wget -q -O /tmp/coreruleset.tar.gz "https://github.com/coreruleset/coreruleset/archive/refs/tags/${CRS_VERSION}.tar.gz"
+echo "${CRS_SHA256}  /tmp/coreruleset.tar.gz" | sha256sum -c -
+tar xzf /tmp/coreruleset.tar.gz -C /etc/caddy/owasp-crs --strip-components=1
+rm -f /tmp/coreruleset.tar.gz
 ```
 
 ### 7. Troubleshooting

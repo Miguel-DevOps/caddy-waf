@@ -1,8 +1,8 @@
 # 🛡️ Caddy con Coraza WAF - Developmi Enterprise Edition
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/miguel-devops/caddy-waf?style=flat-square)](https://github.com/Miguel-DevOps/caddy-waf/pkgs/container/caddy-waf)
+[![Registro GHCR](https://img.shields.io/badge/registro-ghcr.io-blue?style=flat-square)](https://github.com/Miguel-DevOps/caddy-waf/pkgs/container/caddy-waf)
 [![GitHub License](https://img.shields.io/github/license/Miguel-DevOps/caddy-waf?style=flat-square)](LICENSE)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9617/badge)](https://www.bestpractices.dev/projects/9617)
+[![OpenSSF Best Practices En Curso](https://img.shields.io/badge/OpenSSF-Best_Practices_En_Curso-orange?style=flat-square)](https://www.bestpractices.dev/en/criteria)
 
 **Servidor web Caddy endurecido para producción con Coraza WAF y OWASP CRS** - Una solución de firewall de aplicaciones web segura, performante y fácil de desplegar para aplicaciones modernas.
 
@@ -11,14 +11,14 @@
 ## ✨ Características
 
 ### 🔒 Seguridad Primero
-- **Ejecución sin privilegios root**: Se ejecuta como usuario `caddy` (UID 1000) - sin privilegios de root
+- **Ejecución sin privilegios root**: Se ejecuta como usuario `caddy` (UID 1337) - sin privilegios de root
 - **Seguridad de cadena de suministro**: Versiones fijadas, verificación SHA256 de reglas OWASP CRS
 - **Builds multi-etapa**: Superficie de ataque mínima, capas optimizadas
 - **Monitoreo de salud**: Healthcheck que verifica el proceso activo
 - **Logs estructurados**: Logs JSON para integración con SIEM
 
 ### 🛡️ Capacidades del WAF
-- **Coraza WAF v2.1.0**: Firewall de aplicaciones web moderno y de alto rendimiento
+- **Coraza WAF v2.2.0**: Firewall de aplicaciones web moderno y de alto rendimiento
 - **OWASP CRS v4.23.0**: Último conjunto de reglas principales con 290+ reglas de protección
 - **DetectionOnly por defecto**: Previene falsos positivos en nuevos despliegues
 - **Logs de auditoría**: Logs de auditoría JSON a stdout para monitoreo fácil
@@ -34,49 +34,47 @@
 
 ### 1. Descargar la Imagen
 ```bash
-docker pull ghcr.io/miguel-devops/caddy-waf:latest
+docker pull ghcr.io/miguel-devops/caddy-waf:v1.0.0
 ```
 
-### 2. Docker Compose (Recomendado)
-```yaml
-# docker-compose.yml
-
-services:
-  caddy-waf:
-    image: ghcr.io/miguel-devops/caddy-waf:latest
-    container_name: caddy-waf
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      - ACME_EMAIL=admin@yourdomain.com
-
-volumes:
-  caddy_data:
-  caddy_config:
+### 2. Crear Archivo de Entorno
+```bash
+cp .env.example .env
+# Edita .env con tus valores de dominio/backend/imagen
 ```
 
-### 3. Configuración Básica de Caddyfile
+### 3. Crear Caddyfile de Ejecucion Desde la Plantilla (Modo Estricto)
+```bash
+cp Caddyfile.example Caddyfile
+# Edita Caddyfile para tu dominio y upstreams
+```
+
+### 4. Construir Tu Imagen Personalizada (Recomendado para tu distribución)
+```bash
+docker build -t tu-registry/tu-caddy-waf:custom \
+  --build-arg CORAZA_CADDY_REF=v2.2.0 \
+  --build-arg CADDY_RATELIMIT_REF=v0.1.0 \
+  --build-arg CADDY_DNS_CLOUDFLARE_REF=v0.2.3 \
+  .
+```
+
+Luego define `CADDY_WAF_IMAGE=tu-registry/tu-caddy-waf:custom` en `.env`.
+
+### 5. Configuración Básica de Caddyfile
 ```caddyfile
 # Caddyfile - Guarda esto como Caddyfile en el mismo directorio que docker-compose.yml
 {
-    email admin@yourdomain.com
     order coraza_waf first
 }
 
-yourdomain.com, www.yourdomain.com {
-    respond "¡Caddy con Coraza WAF está funcionando! 🚀" 200
+yourdomain.com {
+    respond "Caddy con Coraza WAF está funcionando" 200
 }
 ```
 
-### 4. Iniciar el Contenedor
+### 6. Iniciar el Contenedor
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 📖 Guía de Configuración
@@ -87,6 +85,11 @@ El WAF opera en tres modos (configurados en Caddyfile):
 1. **DetectionOnly** (Por defecto): Registra ataques sin bloquear - perfecto para despliegue inicial
 2. **On**: Protección activa - bloquea solicitudes maliciosas
 3. **Off**: Desactiva el WAF completamente
+
+Despliegue recomendado para producción:
+- Mantener `SecRuleEngine DetectionOnly` durante la ventana inicial de observación.
+- Revisar logs de auditoría y ajustar exclusiones CRS según tráfico real.
+- Cambiar a `SecRuleEngine On` solo cuando exista una línea base estable de falsos positivos (comúnmente 7-14 días, según diversidad de tráfico y frecuencia de cambios).
 
 ### Ejemplo de Caddyfile con WAF
 ```caddyfile
@@ -129,6 +132,8 @@ example.com {
 ### Configuración Avanzada
 Para ajuste detallado del WAF, excepciones de reglas y optimización de rendimiento, consulta la [GUÍA DE AJUSTE](TUNING.md) completa.
 
+El roadmap del proyecto y futuras integraciones de seguridad están en [ROADMAP.md](ROADMAP.md).
+
 ## 🔧 Personalización
 
 ### Usando Reglas OWASP CRS Personalizadas
@@ -141,13 +146,17 @@ volumes:
 ### Variables de Entorno
 | Variable | Por defecto | Descripción |
 |----------|---------|-------------|
-| `ACME_EMAIL` | (ninguno) | Email para certificados Let's Encrypt |
+| `ACME_EMAIL` | (vacío) | Email para certificados Let's Encrypt |
+| `SITE_ADDRESS` | `localhost` | Dirección de sitio/server name usado por Caddy |
+| `BACKEND_UPSTREAM` | `example-app:80` | Upstream del reverse proxy |
+| `CADDY_WAF_IMAGE` | `ghcr.io/miguel-devops/caddy-waf:v1.0.0` | Referencia de imagen Caddy WAF |
+| `EXAMPLE_APP_IMAGE` | `containous/whoami:latest` | Imagen backend de demostración |
 | `CADDY_ADAPTER` | `caddyfile` | Adaptador de configuración a usar |
 
 ### Plugins Incluidos
-- `github.com/corazawaf/coraza-caddy/v2@v2.1.0` - Integración Coraza WAF
-- `github.com/mholt/caddy-ratelimit` - Limitación de tasa
-- `github.com/caddy-dns/cloudflare` - DNS de Cloudflare para ACME
+- `github.com/corazawaf/coraza-caddy/v2@v2.2.0` - Integración Coraza WAF
+- `github.com/mholt/caddy-ratelimit@v0.1.0` - Limitación de tasa
+- `github.com/caddy-dns/cloudflare@v0.2.3` - DNS de Cloudflare para ACME
 
 ## 🧪 Pruebas y Validación
 
@@ -166,10 +175,10 @@ curl -I https://yourdomain.com
 ### Escaneo de Seguridad
 ```bash
 # Escanear imagen con Trivy
-docker run --rm aquasec/trivy image ghcr.io/miguel-devops/caddy-waf:latest
+docker run --rm aquasec/trivy image ghcr.io/miguel-devops/caddy-waf:v1.0.0
 
 # Escanear con Docker Scout
-docker scout quickview ghcr.io/miguel-devops/caddy-waf:latest
+docker scout quickview ghcr.io/miguel-devops/caddy-waf:v1.0.0
 ```
 
 ## 📈 Monitoreo y Observabilidad
