@@ -12,7 +12,7 @@ env:
 jobs:
   build-push:
     name: 📦 Build & Push Multi-Arch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -43,7 +43,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=tag
-            type=raw,value=latest
           labels: |
             org.opencontainers.image.title=Caddy WAF Server
             org.opencontainers.image.description=Production Caddy with Coraza WAF and OWASP CRS
