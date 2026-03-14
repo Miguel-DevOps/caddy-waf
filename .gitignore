@@ -16,3 +16,12 @@ temp-*
 
 # Docker
 docker-compose.override.yml
+
+# Environment files (keep only template in repo)
+.env
+.env.*
+!.env.example
+
+# Runtime config (keep only template in repo)
+Caddyfile
+!Caddyfile.example

@@ -12,6 +12,14 @@ LICENSE
 # Docker configuration
 docker-compose.yml
 
+# Local runtime and operational files
+.env
+.env.*
+!.env.example
+Caddyfile
+ROADMAP.md
+deploy/
+
 # OS metadata files
 .DS_Store
 Thumbs.db
