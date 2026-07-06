@@ -22,6 +22,22 @@ _Protect your web applications with enterprise-grade WAF in under 5 minutes — 
 
 ---
 
+> [!WARNING]
+> ## ⚠️ This Repository Has Been Deprecated
+>
+> This repository is now **deprecated** and is no longer receiving feature updates or active development.
+>
+> The project has been **officially migrated to the Developmi organization**, where all future releases, improvements, security patches, and documentation will continue.
+>
+> **➡️ New official repository:** ![Caddy WAF Developmi Organization](https://github.com/Developmi/caddy-waf)
+>
+> ### Support Timeline
+>
+> - ✅ The Docker image published from **this repository** will continue to receive support and remain available **until August 15, 2026**.
+> - 🚀 After that date, all releases, container images, issue tracking, and development will be available **exclusively** from the new repository.
+>
+> **Please update your bookmarks, Git remotes, CI/CD pipelines, and deployment references to the new repository as soon as possible.**
+
 ## Table of contents
 
 - [Overview](#-overview)
